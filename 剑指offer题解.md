@@ -276,3 +276,230 @@ class Solution {
 
 ​	
 
+四川归来，先刷树相关的题目吧。
+
+#### 27 二叉树的镜像
+
+同leetcode226翻转二叉树，做过但看到又有点懵，只能说常刷常新吧2333。
+
+核心思路其实非常简单，递归交换二叉树的左右子树就可以了。
+
+```Java
+class Solution {
+    public TreeNode mirrorTree(TreeNode root) {
+        if(root==null) return null;
+        mirrorTree(root.left);
+        mirrorTree(root.right);
+        TreeNode temp = null;
+        temp = root.left;
+        root.left = root.right;
+        root.right = temp;
+        return root;
+    }
+}
+```
+
+
+
+#### 28 对称的二叉树
+
+最开始写出的代码是这样的：
+
+```Java
+class Solution {
+    public boolean isSymmetric(TreeNode root) {
+        if(root==null) return true;
+        return isSymmetric(root.left)&&isSymmetric(root.right);
+    }
+
+}
+```
+
+通过了三分之一的用例，看了一下失败用例**[1,2,2,null,3,null,3]**，发现是对“对称”的定义理解有偏差，并不是说一棵二叉树左子树和右子树都是对称的它就是对称的。正确的定义如下：
+
+- 两个对称节点L和R的val相等
+- L的左子节点值等于R的右子节点值
+- L的右子节点值等于R的左子节点值
+
+那么可以写出如下的代码：
+
+```Java
+class Solution {
+    public boolean isSymmetric(TreeNode root) {
+        if(root==null) return true;
+        return traversal(root.left,root.right);
+    }
+    private boolean traversal(TreeNode node1,TreeNode node2){
+        if(node1==null && node2==null){
+            return true;
+        }
+        //此行可简化
+        if(node1==null&&node2!=null || node1!=null&&node2==null || node1.val!=node2.val) return false;
+        return traversal(node1.left,node2.right)&&traversal(node1.right,node2.left);
+    }
+}
+```
+
+逻辑基本没问题，上面代码中标注的那行由于编译会先执行上一个if，所以可以简化一下不影响结果。
+
+```Java
+if(node1==null || node2==null || node1.val!=node2.val) return false;
+```
+
+#### 55-1 二叉树深度
+
+经典且简单，每个学过数据结构的人都会这题吧哈哈哈。
+
+```Java
+class Solution {
+    public int maxDepth(TreeNode root) {
+        if(root==null) return 0;
+        return Math.max(maxDepth(root.left),maxDepth(root.right))+1;
+    }
+}
+```
+
+#### 55-2 平衡二叉树
+
+第一想法肯定是根据55-1计算深度的函数来做，但是这样访问每个节点要递归，计算深度还要递归，理论上会慢一点但是结果还是100%通过了。
+
+```Java
+class Solution {
+    public boolean isBalanced(TreeNode root) {
+        if(root==null) return true;
+        return Math.abs(maxDepth(root.left)-maxDepth(root.right))<=1&&isBalanced(root.left)&&isBalanced(root.right);
+    }
+    private int maxDepth(TreeNode root) {
+        if(root==null) return 0;
+        return Math.max(maxDepth(root.left),maxDepth(root.right))+1;
+    }
+}
+```
+
+看题解还有后序遍历+剪枝的做法，留个坑以后有机会再补充吧。
+
+#### 32-1 从上到下打印二叉树
+
+其实就是二叉树经典算法层序遍历，放在medium有点过分。借助队列实现，此处可以注意一些java的知识
+
+- LinkedList和Queue的关系
+
+- 把LinkedList当队列使用时offer和poll方法
+
+- ArrayList和int[]的区别与联系
+
+有机会去看看Java容器的原码，此题代码没什么好讲了思路很清晰：
+
+```Java
+class Solution {
+    public int[] levelOrder(TreeNode root) {
+        if(root==null) return new int[0];
+        Queue<TreeNode> q = new LinkedList<>();
+        ArrayList<Integer> temp = new ArrayList<>();
+        q.offer(root);
+        while(!q.isEmpty()){
+            TreeNode node = q.poll();
+            temp.add(node.val);
+            if(node.left!=null) q.offer(node.left);
+            if(node.right!=null) q.offer(node.right);
+        }
+        int[] res = new int[temp.size()];
+        for(int i=0;i<res.length;i++){
+            res[i]=temp.get(i);
+        }
+        return res;
+    }
+}
+```
+
+#### 32-2 从上到下打印二叉树(二)
+
+这题放easy纯粹是因为有上一题吧，添加一个限制条件要同层的节点放在一个数组里。解决方法是每次处理的时候在内部再写一个循环，一次处理一层的节点。
+
+```Java
+class Solution {
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        List<List<Integer>> res = new ArrayList<>();
+        if(root==null) return res;
+        Queue<TreeNode> q = new LinkedList<>();
+        q.offer(root);
+        while(!q.isEmpty()){
+            List<Integer> temp = new ArrayList<>();
+            int layerNum = q.size();
+            for(int i=0;i<layerNum;i++){
+                TreeNode node = q.poll();
+                temp.add(node.val);
+                if(node.left!=null) q.offer(node.left);
+                if(node.right!=null) q.offer(node.right);
+            }
+            res.add(temp);
+        }
+        return res;
+    }
+}
+```
+
+#### 32-3 从上到下打印二叉树(三)
+
+再新加要求每层根据奇偶层正序或倒序输出，看到这个要求本菜鸡肯定是只能想到把偶数层的倒序，从上题代码改改得到：
+
+```Java
+class Solution {
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        List<List<Integer>> res = new ArrayList<>();
+            if(root==null) return res;
+            Queue<TreeNode> q = new LinkedList<>();
+            q.offer(root);
+            int l = 0; // l为层数
+            while(!q.isEmpty()){
+                List<Integer> temp = new ArrayList<>();
+                int layerNum = q.size();
+                for(int i=0;i<layerNum;i++){
+                    TreeNode node = q.poll();
+                    temp.add(node.val);
+                    if(node.left!=null) q.offer(node.left);
+                    if(node.right!=null) q.offer(node.right);
+                }
+                l++;
+                if(l%2==1) res.add(temp);
+                else {
+                    Collections.reverse(temp);
+                    res.add(temp);
+                }
+            }
+            return res;
+    }
+}
+```
+
+但是如果只是这样这题有啥意义呢？看题解发现一个使用双端队列的做法，可以学习一下Java中怎么把LinkedList当双端队列用。
+
+```Java
+class Solution {
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        List<List<Integer>> res = new ArrayList<>();
+            if(root==null) return res;
+            Queue<TreeNode> q = new LinkedList<>();
+            q.offer(root);
+            int l = 0; // l为层数
+            while(!q.isEmpty()){
+                LinkedList<Integer> temp = new LinkedList<>();//双端队列
+                int layerNum = q.size();
+                l++;
+                for(int i=0;i<layerNum;i++){
+                    TreeNode node = q.poll();
+                    if(l%2==1){
+                        temp.addLast(node.val);
+                    }else{
+                        temp.addFirst(node.val);
+                    }
+                    if(node.left!=null) q.offer(node.left);
+                    if(node.right!=null) q.offer(node.right);
+                }
+                res.add(temp);
+            }
+            return res;
+    }
+}
+```
+

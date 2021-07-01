@@ -503,3 +503,141 @@ class Solution {
 }
 ```
 
+#### 54 二叉搜索树的第二大节点
+
+首先复习一下二叉搜索树
+
+- 所有的左子树小于根节点，所有的右子树大于根节点 
+
+- 对二叉树进行中序遍历会得到一个递增序列。
+
+这题要找第k大个节点，那么也就是要递减序列的第k个，应该按照右-根-左的顺序进行遍历，这样得到递减序列，找出第k个即为所得。
+
+```Java
+class Solution {
+    int res,k;
+    public int kthLargest(TreeNode root, int k) {
+        this.k = k;
+        dfs(root);
+        return res;
+    }
+    private void dfs(TreeNode root){
+        if(root==null||k==0) return; //注意这里的终止条件 k=0意味着已经找到第k大节点，后面的递归就没有意义了
+        dfs(root.right);
+        if(--k==0) res = root.val;
+        dfs(root.left);
+    }
+}
+```
+
+#### 68-1 二叉搜索树的最近公共祖先
+
+很有意思的一题，需要注意的是当遍历到二叉搜索树的一个节点时，只有以下三种情况：
+
+- p、q都在当前节点左子树
+
+- p、q都在当前节点右子树
+
+- 当前节点为分叉节点（即pq分别在当前节点的左右子树，一个值大于当前节点，一个值小于当前节点）
+
+```Java
+class Solution {
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        TreeNode node = root;
+        while(node!=null){
+            if(p.val>node.val&&q.val>node.val) node=node.right;
+            else if(p.val<node.val&&q.val<node.val) node=node.left;
+            else break;
+        }
+        return node;
+    }
+}
+```
+
+#### 68-2 二叉树的公共最近祖先
+
+这题相比上一题把条件放宽到二叉树，失去了二叉搜索树的性质让查找变难，需要用递归来查找，但是总体的思路是一样的，即找到一个节点使得这个节点是pq之一或pq分别在此节点的左右子树。
+
+```Java
+class Solution {
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        if(root==null||root==p||root==q) return root; //递归到空节点返回空，如果是pq就返回pq
+        TreeNode leftNode = lowestCommonAncestor(root.left,p,q);//递归查找左子树
+        TreeNode rightNode = lowestCommonAncestor(root.right,p,q);//递归查找右子树
+        if((leftNode!=null&&rightNode!=null)) return root; //两个都不为空意味着l为p，r为q或者l为q，r为p
+        return leftNode==null?rightNode:leftNode; //执行到这一句意味着l和r其中一个为空，也就意味着公共节点是pq之一，那么返回非空的那个就行了
+    }
+}
+```
+
+#### 34 二叉树中和为某一值的路径
+
+最最经典的回溯法，思路还是很清晰的。
+
+```java
+class Solution {
+    private List<List<Integer>> res = new ArrayList<>();
+    private List<Integer> tem = new ArrayList<>();
+    public List<List<Integer>> pathSum(TreeNode root, int target) {
+        recur(root,target);
+        return res;
+    }
+    private void recur(TreeNode root, int target) {
+        //递归到空节点return，也可在下面递归调用时判断是否为空再调用
+        if(root==null) return;
+        target-=root.val;
+        //进if说明找到了一条满足条件的路径
+        if(target==0&&root.left==null&&root.right==null){
+            tem.add(root.val);
+            res.add(new ArrayList(tem));
+            tem.remove(tem.size()-1);
+            return;
+        }
+        //没有进if则执行下面四行
+        tem.add(root.val);
+        recur(root.left,target);
+        recur(root.right,target);
+        tem.remove(tem.size()-1);
+    }
+}
+```
+
+#### 33 二叉搜索树的后序遍历序列
+
+这题思路是有的，肯定是递归判断左右子树是否满足条件，借鉴前序中序序列生成二叉树的写法，用上下界控制递归，就不用搞什么分割数组的操作了。
+
+```Java
+class Solution {
+    public boolean verifyPostorder(int[] postorder) {
+        return recur(postorder,0,postorder.length-1);
+    }
+    private boolean recur(int[] postorder,int i, int j){ //i，j为数组上下界
+        if(i>=j) return true;
+        int left = i;
+        while(postorder[left]<postorder[j]) left++;
+        int right = left;
+        while(postorder[right]>postorder[j]) right++;
+        //right==j意味着i到left-1都小于root，left到j-1都大于root，满足二叉搜索树的条件
+        return right==j&&recur(postorder,i ,left-1)&&recur(postorder,left,j-1);
+    }
+}
+```
+
+#### 26-树的子结构
+
+这题思路有的，一个函数用来递归查找当前树A是否包含树B，外层再来一个函数递归树A的每一个节点。问题出在怎么确定树A是否包含树B（因为不是AB相等，例如[4,1,2]也算是包含[4,1]的。瞄了一眼题解的代码发现只要B==null时不管A是什么都算作是包含在A里就可以作为递归出口了，妙蛙！
+
+```Java
+class Solution {
+    public boolean isSubStructure(TreeNode A, TreeNode B) {
+        if(A==null||B==null) return false;
+        return isSub(A,B)||isSubStructure(A.left,B)||isSubStructure(A.right,B);
+    }
+    private boolean isSub(TreeNode A, TreeNode B){
+        if(B==null) return true;
+        if(A==null||A.val!=B.val) return false;
+        return isSub(A.left,B.left)&&isSub(A.right,B.right);
+    }
+}
+```
+

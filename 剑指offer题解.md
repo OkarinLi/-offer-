@@ -641,3 +641,292 @@ class Solution {
 }
 ```
 
+今天做点简单的吧，给咱上一盘双指针。
+
+#### 25 合并两个有序链表
+
+```Java
+class Solution {
+    public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
+        ListNode root = new ListNode(0);
+        ListNode tem = root;
+        while(l1!=null&&l2!=null){
+            if(l1.val<=l2.val){
+                tem.next = l1;
+                l1=l1.next;
+            }else{
+                tem.next = l2;
+                l2=l2.next;
+            }
+            tem = tem.next;
+        }
+        tem.next = l1==null?l2:l1;
+        return root.next;
+    }
+}
+```
+
+唯一要说的是空头结点的使用，可以让添加变得容易，最后返回root.next就好。
+
+#### 57-1 和为s的两个数字
+
+简单的双指针应用，目前在面对有序数组的时候有两个思路：
+
+- 双指针
+
+- 二分查找
+
+```Java
+class Solution {
+    public int[] twoSum(int[] nums, int target) {
+        int i = 0, j = nums.length-1;
+        while(i<j){
+            if(nums[i]+nums[j]<target){
+                i++;
+            }else if(nums[i]+nums[j]>target){
+                j--;
+            }else{
+                return new int[]{nums[i],nums[j]};
+            }
+        }
+        return new int[0];
+    }
+}
+```
+
+#### 57-2 和为s的连续正数序列
+
+有了上题的铺垫很容易想到双指针，另外原来这种类型的双指针就是滑动窗口啊。
+
+此题最恶心的是用Java做要返回int数组，就离谱，时间都花在怎么转回数组上了。记录一下做法，但是除了做题正经人谁写这种代码啊。
+
+```java
+ArrayList<int[]> resArray = new ArrayList<>();
+resArray.toArray(new int[resArray.size()][]);
+```
+
+
+
+```Java
+class Solution {
+    public int[][] findContinuousSequence(int target) {
+        ArrayList<int[]> resArray = new ArrayList<>();
+        int i = 1, j = 2;
+        while(i<=target/2){
+            int sum = ((i+j)*(j-i+1))/2;
+            if(sum<target){
+                j++;
+            }else if(sum>target){
+                i++;
+            }else{
+                int[] temp = new int[j-i+1];
+                for(int k=i;k<=j;k++){
+                    temp[k-i] = k;
+                }
+                resArray.add(temp);
+                i++;
+            }
+        }
+        return resArray.toArray(new int[resArray.size()][]);
+    }
+}
+```
+
+#### 22 链表中倒数第k个节点
+
+太熟悉以至于不知道说啥了
+
+```Java
+class Solution {
+    public ListNode getKthFromEnd(ListNode head, int k) {
+        ListNode l=head,r=head;
+        for(int i=0;i<k-1;i++){
+            r=r.next;
+        }
+        while(r.next!=null){
+            l=l.next;
+            r=r.next;
+        }
+        return l;
+    }
+}
+```
+
+#### 21 调整数组顺序使奇数位于偶数前面
+
+想到了要双指针然后奇偶交换，但是思维陷入误区，没想到一个从前往后以后从后往前。
+
+```Java
+class Solution {
+    public int[] exchange(int[] nums) {
+        int l = 0, r = nums.length-1;
+        while(l<r){
+            if(nums[l]%2==1){
+                l++;
+                continue;
+            }
+            if(nums[r]%2==0){
+                r--;
+                continue;
+            }
+            //交换时l指向从左到右第一个偶数，r指向从右到左第一个奇数
+            int temp = nums[l];
+            nums[l] = nums[r];
+            nums[r] = temp;
+            
+        }
+        return nums;
+    }
+}
+```
+
+如果要两个指针都从第一个数开始，那么就要用快慢指针，快指针去找第一个奇数，慢指针去找第一个可以放奇数的位置。
+
+```Java
+class Solution {
+    public int[] exchange(int[] nums) {
+        int s = 0, f = 0;
+        while(f<nums.length){
+            if(nums[f]%2==1){
+                int temp = nums[s];
+                nums[s] = nums[f];
+                nums[f] = temp;
+                s++;
+            }
+            f++;
+        }
+        return nums;
+    }
+}
+```
+
+#### 52 链表的第一个公共节点
+
+自己的想法是两次遍历，第一次找到两个链表的差值，第二次让长的节点先开始遍历，相遇的时候就是第一个公共节点。
+
+```Java
+public class Solution {
+    public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+        if(headA==null||headB==null) return null;
+        ListNode A = headA, B = headB;
+        int count = 0;
+        while(A.next!=null&&B.next!=null){
+            A=A.next;
+            B=B.next;
+        }
+        if(A.next==null){
+            while(B!=A&&B!=null){
+                B=B.next;
+                count++;
+            }
+            if(B==null) return null;
+            A=headA;
+            B=headB;
+            for(;count>0;count--){
+                B=B.next;
+            }
+            while(A!=B){
+                A=A.next;
+                B=B.next;
+            }
+            return A;
+        }
+        if(B.next==null){
+            while(A!=B&&A!=null){
+                A=A.next;
+                count++;
+            }
+            if(A==null) return null;
+            A=headA;
+            B=headB;
+            for(;count>0;count--){
+                A=A.next;
+            }
+            while(A!=B){
+                A=A.next;
+                B=B.next;
+            }
+            return B;
+        }
+        return null;
+    }
+}
+```
+
+结果看了题解给我整不会了，确实挺巧妙的但是关键还是太tm浪漫了。
+
+[图解 双指针法，浪漫相遇 - 两个链表的第一个公共节点 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/liang-ge-lian-biao-de-di-yi-ge-gong-gong-jie-dian-lcof/solution/shuang-zhi-zhen-fa-lang-man-xiang-yu-by-ml-zimingm/)
+
+```shell
+你变成我，走过我走过的路。
+我变成你，走过你走过的路。
+然后我们便相遇了..
+```
+
+```Java
+public class Solution {
+    public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+        ListNode A=headA, B=headB;
+        while(A!=B){
+            A=A!=null ? A.next : headB;
+            B=B!=null ? B.next :headA;
+        }
+        return A;
+    }
+}
+```
+
+这题解写的，估计这辈子忘不掉了。今天的刷题到此为止吧。
+
+#### 64 求1+2+...+n
+
+莫名其妙的题，感觉是脑筋急转弯，用递归可以过，题解里的展开方法不知道有啥用，先不管了。哪个公司出这个题来面试在我这直接印象分就没了。
+
+```Java
+class Solution {
+    public int sumNums(int n) {
+        return n==0? 0 : sumNums(n-1) + n;
+    }
+}
+```
+
+#### 18 24 简单链表题 略过
+
+#### 42 连续子数组的最大和
+
+经典动态规划，明天开始好好做一下动态规划吧，这题算是个预热。
+
+```Java
+class Solution {
+    public int maxSubArray(int[] nums) {
+        int[] dp = new int[nums.length];
+        dp[0] = nums[0];
+        for(int i=1;i<nums.length;i++){
+            //注意这里的转移方程 当dp[i-1]<=0时，意味着其对下一个位置起副作用，因此下一个位置的最大值就是nums[i]它本身
+            //换言之，如果dp[i-1]>0，下一个位置的最大值就是dp[i-1]+nums[i]
+            dp[i] = dp[i-1]<=0?nums[i]:dp[i-1]+nums[i];
+        }
+        int max =Integer.MIN_VALUE;
+        for(int i=0;i<nums.length;i++){
+            if(dp[i]>max) max = dp[i];
+        }
+        return max;
+    }
+}
+```
+
+按照惯例dp问题肯定可以优化空间复杂度的，比如题解里的做法是直接在nums数组上进行修改的，不过这种做法修改了原数组。
+
+```Java
+class Solution {
+    public int maxSubArray(int[] nums) {
+        int res = nums[0];
+        for(int i = 1; i < nums.length; i++) {
+            nums[i] += Math.max(nums[i - 1], 0);
+            res = Math.max(res, nums[i]);
+        }
+        return res;
+    }
+}
+```
+

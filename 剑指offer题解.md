@@ -930,3 +930,226 @@ class Solution {
 }
 ```
 
+#### 63 股票的最大利润
+
+这题由于只能买卖一次，比较简单，不该分在medium吧。
+
+```Java
+class Solution {
+    public int maxProfit(int[] prices) {
+        int res = 0;
+        int low_price = Integer.MAX_VALUE;
+        for(int i=0;i<prices.length;i++){
+            if(prices[i]<low_price) low_price = prices[i];
+            if(prices[i]-low_price>res) res = prices[i]-low_price;
+        }
+        return res;
+    }
+}
+```
+
+重点看下可以多次买卖的下面这题。
+
+#### leetcode-122 买卖股票的最佳时机（二）
+
+这题理论上该用动态规划，但是可以投机取巧，或者好听点说叫贪心算法。
+
+```Java
+class Solution {
+    public int maxProfit(int[] prices) {
+        if(prices.length==0) return 0;
+        int res = 0;
+        for(int i=1;i<prices.length;i++){
+            if(prices[i]>prices[i-1]){
+                res+=prices[i]-prices[i-1];
+            }
+        }
+        return res;
+    }
+}
+```
+
+每次当天价格比前一天贵的时候就可以算作前一天买入当天卖出，最后的结果是正确的。如果用动态规划来做的话麻烦的多，需要一个二维数组来表示当天持有或不持有股票时的利润最大值。
+
+```Java
+class Solution {
+    public int maxProfit(int[] prices) {
+        int n = prices.length;
+        int[][] dp = new int[n][2];
+        //dp[i][0]表示第i天没有持有股票时的最大利润
+        //dp[i][1]表示第i天持有股票时的最大利润
+        dp[0][0] = 0;
+        dp[0][1] = -prices[0];
+        for (int i = 1; i < n; ++i) {
+            //前一天就没持有，或者前一天持有但是当天卖掉了
+            dp[i][0] = Math.max(dp[i - 1][0], dp[i - 1][1] + prices[i]);
+            //前一天就持有，或是前一天未持有当天买入
+            dp[i][1] = Math.max(dp[i - 1][1], dp[i - 1][0] - prices[i]);
+        }
+        return dp[n - 1][0];
+    }
+}
+
+```
+
+看懂上面这个的话还可以优化一下空间复杂度，每天的状态只和前一天有关，所以只要两个变量存前一天就可以了。
+
+```Java
+class Solution {
+    public int maxProfit(int[] prices) {
+        int n = prices.length;
+        int dp0 = 0, dp1 = -prices[0];
+        for (int i = 1; i < n; ++i) {
+            dp0 = Math.max(dp0, dp1 + prices[i]);
+            dp1 = Math.max(dp1, dp0 - prices[i]);
+        }
+        return dp0;
+    }
+}
+```
+
+
+
+#### 47 礼物的最大价值
+
+终于可以秒杀这种比较简单的动态规划问题了，这题不用保留原数组，所以直接在原来的数组上修改了。
+
+```Java
+class Solution {
+    public int maxValue(int[][] grid) {
+        int m = grid.length;
+        int n = grid[0].length;
+       for(int i=1;i<n;i++){
+           grid[0][i] += grid[0][i-1];
+       }
+       for(int i=1;i<m;i++){
+           grid[i][0] += grid[i-1][0]; 
+       }
+       for(int i=1;i<m;i++){
+           for(int j=1;j<n;j++){
+               grid[i][j] += Math.max(grid[i-1][j],grid[i][j-1]);
+           }
+       }
+        return grid[m-1][n-1];
+    }
+}
+```
+
+#### 50 第一个只出现一次的字符
+
+很自然想到用hashmap来做，统计并存储每个字符出现的次数，第二次遍历来找到只出现一次的字符。
+
+```Java
+class Solution {
+    public char firstUniqChar(String s) {
+         HashMap<Character, Integer> dic = new HashMap<>();
+         for(int i=0;i<s.length();i++){
+             char c = s.charAt(i);
+             if(dic.containsKey(c)){
+                 dic.put(c,dic.get(c)+1);
+             }else{
+                 dic.put(c,1);
+             }
+         }
+         for(int i=0;i<s.length();i++){
+             char c = s.charAt(i);
+             if(dic.get(c)==1) return c;
+         }
+         return ' ';
+    }
+}
+```
+
+题解的做法有两个可以学习的地方：
+
+- hashmap可以直接用boolean，不需要统计每个的次数，只要知道是否出现超过一次就行了。
+
+- 直接把String转成char数组，遍历和取值都更方便一点。
+
+```Java
+class Solution {
+    public char firstUniqChar(String s) {
+        HashMap<Character, Boolean> dic = new HashMap<>();
+        char[] sc = s.toCharArray();
+        for(char c : sc)
+            dic.put(c, !dic.containsKey(c));
+        for(char c : sc)
+            if(dic.get(c)) return c;
+        return ' ';
+    }
+}
+```
+
+#### 39 数组中出现次数超过一半的数字
+
+延续上题的思路肯定是哈希咯，统计每个数字出现的次数。理论上是O(n)的复杂度，但是执行并不快，为什么呢？
+
+```Java
+class Solution {
+    public int majorityElement(int[] nums) {
+        HashMap<Integer,Integer> dic = new HashMap<>();
+        for(int num : nums){
+            if(dic.containsKey(num)){
+                dic.put(num,dic.get(num)+1);
+            }else{
+                dic.put(num,1);
+            }
+        }
+        for(int num:nums){
+            if(dic.get(num)>nums.length/2) return num;
+        }
+        return -1;
+    }
+}
+```
+
+因为要找的元素次数超过长度一般，所以可以不讲武德的排序后取中间位置的元素，一定是所找元素，但是不讲武德的代价是O(nlongn)。
+
+```Java
+class Solution {
+    public int majorityElement(int[] nums) {
+        Arrays.sort(nums);
+        return nums[nums.length/2];
+    }
+}
+```
+
+题解中贼tm秀的Boyer-Moore 投票算法，O(n)时间复杂度，O(1)空间复杂度 ,理论上是这题的最优解？
+
+```Java
+class Solution {
+    public int majorityElement(int[] nums) {
+        int count = 0;
+        Integer candidate = null;
+        
+        for (int num : nums) {
+            if (count == 0) {
+                candidate = num;
+            }
+            count += (num == candidate) ? 1 : -1;
+        }
+        return candidate;
+    }
+}
+```
+
+
+
+#### 15 二进制中1的个数
+
+经典位运算，关键在于怎么取到每一位，对1进行移位加与操作应该是基操了吧？
+
+```Java
+public class Solution {
+    public int hammingWeight(int n) {
+        int res = 0;
+        for (int i = 0; i < 32; i++) {
+            if ((n & (1 << i)) != 0) {
+                res++;
+            }
+        }
+        return res;
+    }
+}
+```
+

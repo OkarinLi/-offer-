@@ -1153,3 +1153,129 @@ public class Solution {
 }
 ```
 
+#### 12 矩阵中的路径
+
+经典题目，没做出来看的题解，细节非常多，个人觉得有以下几个要点。
+
+1. dfs
+
+   首先要能想得到dfs，其次在递归时怎么选择函数的参数可以使代码更简洁。
+
+2. 怎么保证不走回头路？
+
+   基础做法是用一个二维布尔数组来表示这个位置是否被访问过，高级做法是将访问过的位置修改为一个特殊字符，在递归回来后再改回来，这样既不需要额外的空间，又不影响之后的递归。
+
+3. 剪枝
+
+   在之后的递归已经不可能满足条件时，及时返回停止后面的递归。
+
+```Java
+class Solution {
+    public boolean exist(char[][] board, String word) {
+        char[] words = word.toCharArray();
+        for(int i = 0; i < board.length; i++) {
+            for(int j = 0; j < board[0].length; j++) {
+                if(dfs(board, words, i, j, 0)) return true;
+            }
+        }
+        return false;
+    }
+    boolean dfs(char[][] board, char[] word, int i, int j, int k) { //i、j为坐标，k为字符在word中的位置
+        //i、j越界或是当前位置字符已经和word[k]不一样时返回false
+        if(i >= board.length || i < 0 || j >= board[0].length || j < 0 || board[i][j] != word[k]) return false;
+        //全部匹配上时返回true
+        if(k == word.length - 1) return true;
+        //访问过的位置修改为空，表示标记已访问过
+        board[i][j] = '\0';
+        //递归周围四个位置
+        boolean res = dfs(board, word, i + 1, j, k + 1) || dfs(board, word, i - 1, j, k + 1) || 
+                      dfs(board, word, i, j + 1, k + 1) || dfs(board, word, i , j - 1, k + 1);
+        //这里是最迷惑的，按我自己的想法是用一个temp来存当前位置的值，但是可以直接word[k]，是因为如果这个位置不等于word[k]，那在前面就返回false了，根本不会执行到这里。
+        board[i][j] = word[k];
+        return res;
+    }
+}
+```
+
+#### 20 表示数值的字符串
+
+边界条件太多了，纯恶心人，面试遇到直接放弃。当然作为（前）前端选手，用JS来投机取巧吧反正也能过。
+
+```javascript
+var isNumber = function(s) {
+    if(s==" ") return false;
+    var num = Number(s);
+    return !isNaN(s);
+};
+```
+
+#### 56-1 数组中数字出现的次数
+
+如果只有一个数字是只出现一次，那么进行一次全员异或就行了，但是这边有两个数字都只出现了一次，所以要进行分组异或。至于怎么分组，只能说奇怪的知识增加了。
+
+```Java
+class Solution {
+    public int[] singleNumbers(int[] nums) {
+        int ret = 0;
+        for (int n : nums) {
+            ret ^= n;
+        }
+        int div = 1;
+        while ((div & ret) == 0) {
+            div <<= 1;
+        }
+        int a = 0, b = 0;
+        for (int n : nums) {
+            if ((div & n) != 0) {
+                a ^= n;
+            } else {
+                b ^= n;
+            }
+        }
+        return new int[]{a, b};
+    }
+}
+
+```
+
+#### 56-2 数组中数字出现的次数（二）
+
+位运算太妖了，本菜鸡还是老老实实HashMap吧。
+
+```Java
+class Solution {
+    public int singleNumber(int[] nums) {
+        HashMap<Integer,Boolean> dic = new HashMap<>();
+        for(int num:nums){
+            if(!dic.containsKey(num)) dic.put(num,false);
+            else dic.put(num,true);
+        }
+        for(int num:nums){
+            if(!dic.get(num)) return num;
+        }
+        return -1;
+    }
+}
+```
+
+#### 31 栈的压入弹出序列
+
+在书面的数据结构题里这题是很经典的，编码实现还是用一个栈来模拟一下吧。如果能够按照给定的顺序入栈出栈，最后栈为空，那么就说明给定序列合法。
+
+```Java
+class Solution {
+    public boolean validateStackSequences(int[] pushed, int[] popped) {
+        Stack<Integer> s = new Stack<>();
+        int i=0;//i标记popped中的位置
+        for(int num: pushed){
+            s.push(num);
+            while(!s.empty()&&s.peek()==popped[i]){
+                s.pop();
+                i++;
+            }
+        }
+        return s.empty();
+    }
+}
+```
+
